@@ -11,7 +11,7 @@
 -----------------------------------------------------------------------------
 module Database.Kdb.Internal.IPCTest (tests) where
 
-import qualified Blaze.ByteString.Builder as Blaze
+import qualified Data.ByteString.Builder as BB
 import           Control.Applicative      ((<$>), (<*))
 import           Control.DeepSeq          (deepseq)
 import qualified Data.Attoparsec          as A
@@ -57,7 +57,7 @@ testCases f = f <$> t
 
 serializationTest :: SimpleTestCase -> TestTree
 serializationTest (msg, actual, expected) = testCase msg $ do
-        let actualIPC    = Blaze.toByteString $ Kdb.asyncIPC actual
+        let actualIPC    = BB.bytestring $ Kdb.asyncIPC actual
             msg' = unlines [
                 msg
               , "   actual  =" ++ (unpack . encode $ actualIPC)

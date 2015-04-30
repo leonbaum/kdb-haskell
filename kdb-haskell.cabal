@@ -39,7 +39,7 @@ library
   default-language:   Haskell2010
   build-depends:      base >= 4 && < 5, transformers
                     , deepseq
-                    , network, io-streams, exceptions, blaze-builder, attoparsec
+                    , network, io-streams, exceptions, attoparsec
                     , cpu
                     , time
                     , bytestring
@@ -61,7 +61,7 @@ test-suite kdb-haskell-tests
   type:               exitcode-stdio-1.0
   build-depends:      base >= 4 && < 5, transformers
                     , deepseq
-                    , network, io-streams, exceptions, blaze-builder, attoparsec
+                    , network, io-streams, exceptions, attoparsec
                     , cpu
                     , time
                     , bytestring
@@ -96,7 +96,7 @@ benchmark kdb-haskell-benchmark
   main-is:            Benchmark.hs
   build-depends:      base >= 4 && < 5, transformers
                     , deepseq
-                    , network, io-streams, exceptions, blaze-builder, attoparsec
+                    , network, io-streams, exceptions, attoparsec
                     , cpu
                     , time
                     , bytestring

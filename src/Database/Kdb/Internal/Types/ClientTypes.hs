@@ -31,7 +31,7 @@ module Database.Kdb.Internal.Types.ClientTypes (
   , InvalidCredentials(..)
   ) where
 
-import           Blaze.ByteString.Builder  (Builder)
+import           Data.ByteString.Builder   (Builder)
 import           Control.Lens
 import           Control.Monad.Catch       (Exception)
 import           Data.ByteString           (ByteString)

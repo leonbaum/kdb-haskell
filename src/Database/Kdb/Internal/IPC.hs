@@ -41,8 +41,9 @@ module Database.Kdb.Internal.IPC (
   , systemEndianess
   ) where
 
-import           Blaze.ByteString.Builder             (Builder)
-import qualified Blaze.ByteString.Builder             as Blaze
+import           Data.ByteString.Builder              (Builder)
+import qualified Data.ByteString.Builder              as BB
+import qualified Data.ByteString.Builder.Extra        as BB
 import           Control.Applicative                  (pure, (*>), (<$>), (<*),
                                                        (<*>))
 import           Control.Monad                        (replicateM)
@@ -88,11 +89,11 @@ syncIPCB = qIPC Sync
 -- username:password\versionbyte\0
 loginBytes :: Maybe B.ByteString -> Maybe B.ByteString -> Version -> Builder
 loginBytes username pass ver
-  = Blaze.copyByteString (fromMaybe "" username) <>
-    Blaze.copyByteString ":"                     <>
-    Blaze.copyByteString (fromMaybe "" pass)     <>
-    (Blaze.fromWord8 . capability $ ver)         <>
-    Blaze.fromWord8 0
+  = BB.byteString (fromMaybe "" username) <>
+    BB.byteString ":"                     <>
+    BB.byteString (fromMaybe "" pass)     <>
+    (BB.word8 . capability $ ver)         <>
+    BB.word8 0
 {-# INLINE loginBytes #-}
 
 qIPC :: MessageType -> Value -> Builder
@@ -103,12 +104,12 @@ qIPC x y = let bsize = 8 + KT.size y
 qIPCBytes :: MessageType -> Int -> Value -> Builder
 qIPCBytes mode size qobj =
   -- endianess,mode,0,0 - all Word8
-  Blaze.fromWord8 systemEndianess <>
-  Blaze.fromWord8 (msgType mode)  <>
-  Blaze.fromWord8 0               <>
-  Blaze.fromWord8 0               <>
+  BB.word8 systemEndianess <>
+  BB.word8 (msgType mode)  <>
+  BB.word8 0               <>
+  BB.word8 0               <>
   -- put total IPC byte length
-  Blaze.fromWord32host (fromIntegral size) <>
+  BB.word32Host (fromIntegral size) <>
   -- generate IPC bytes for Q object
   qBytes qobj
 {-# INLINE qIPCBytes #-}
@@ -116,23 +117,23 @@ qIPCBytes mode size qobj =
 -- | Function to build Q IPC representation (except message header)
 -- TODO: Get rid of all these unsafeCoerce calls, it's unsanitary
 qBytes :: Value -> Builder
-qBytes v@(A (KBool        !x)) = putType v <> Blaze.fromWord8      x
-qBytes v@(A (KByte        !x)) = putType v <> Blaze.fromWord8      x
-qBytes v@(A (KShort       !x)) = putType v <> Blaze.fromWord16host (unsafeCoerce x)
-qBytes v@(A (KInt         !x)) = putType v <> Blaze.fromWord32host (unsafeCoerce x)
-qBytes v@(A (KLong        !x)) = putType v <> Blaze.fromWord64host (unsafeCoerce x)
-qBytes v@(A (KReal        !x)) = putType v <> Blaze.fromWord32host (unsafeCoerce x)
-qBytes v@(A (KFloat       !x)) = putType v <> Blaze.fromWord64host (unsafeCoerce x)
-qBytes v@(A (KChar        !x)) = putType v <> Blaze.fromWord8      (unsafeCoerce x)
+qBytes v@(A (KBool        !x)) = putType v <> BB.word8      x
+qBytes v@(A (KByte        !x)) = putType v <> BB.word8      x
+qBytes v@(A (KShort       !x)) = putType v <> BB.word16Host (unsafeCoerce x)
+qBytes v@(A (KInt         !x)) = putType v <> BB.word32Host (unsafeCoerce x)
+qBytes v@(A (KLong        !x)) = putType v <> BB.word64Host (unsafeCoerce x)
+qBytes v@(A (KReal        !x)) = putType v <> BB.word32Host (unsafeCoerce x)
+qBytes v@(A (KFloat       !x)) = putType v <> BB.word64Host (unsafeCoerce x)
+qBytes v@(A (KChar        !x)) = putType v <> BB.word8      (unsafeCoerce x)
 qBytes v@(A (KSym         !x)) = putType v <> fromWord8V           (unsafeCoerce x)
-qBytes v@(A (KTimestamp   !x)) = putType v <> Blaze.fromWord64host (unsafeCoerce x)
-qBytes v@(A (KMonth       !x)) = putType v <> Blaze.fromWord32host (unsafeCoerce x)
-qBytes v@(A (KDate        !x)) = putType v <> Blaze.fromWord32host (unsafeCoerce x)
-qBytes v@(A (KDateTime    !x)) = putType v <> Blaze.fromWord64host (unsafeCoerce x)
-qBytes v@(A (KTimespan    !x)) = putType v <> Blaze.fromWord64host (unsafeCoerce x)
-qBytes v@(A (KMinute      !x)) = putType v <> Blaze.fromWord32host (unsafeCoerce x)
-qBytes v@(A (KSecond      !x)) = putType v <> Blaze.fromWord32host (unsafeCoerce x)
-qBytes v@(A (KTime        !x)) = putType v <> Blaze.fromWord32host (unsafeCoerce x)
+qBytes v@(A (KTimestamp   !x)) = putType v <> BB.word64Host (unsafeCoerce x)
+qBytes v@(A (KMonth       !x)) = putType v <> BB.word32Host (unsafeCoerce x)
+qBytes v@(A (KDate        !x)) = putType v <> BB.word32Host (unsafeCoerce x)
+qBytes v@(A (KDateTime    !x)) = putType v <> BB.word64Host (unsafeCoerce x)
+qBytes v@(A (KTimespan    !x)) = putType v <> BB.word64Host (unsafeCoerce x)
+qBytes v@(A (KMinute      !x)) = putType v <> BB.word32Host (unsafeCoerce x)
+qBytes v@(A (KSecond      !x)) = putType v <> BB.word32Host (unsafeCoerce x)
+qBytes v@(A (KTime        !x)) = putType v <> BB.word32Host (unsafeCoerce x)
 qBytes v@(V (KBoolV       !x)) = putListHeader v <> fromWord8V  (unsafeCoerce x)
 qBytes v@(V (KByteV       !x)) = putListHeader v <> fromWord8V  (unsafeCoerce x)
 qBytes v@(V (KShortV      !x)) = putListHeader v <> fromWord16V (unsafeCoerce x)
@@ -151,7 +152,7 @@ qBytes v@(V (KMinuteV     !x)) = putListHeader v <> fromWord32V (unsafeCoerce x)
 qBytes v@(V (KSecondV     !x)) = putListHeader v <> fromWord32V (unsafeCoerce x)
 qBytes v@(V (KTimeV       !x)) = putListHeader v <> fromWord32V (unsafeCoerce x)
 qBytes v@(KList           !x)  = putListHeader v <> fromValueV x
-qBytes v@(KTable        _ !x)  = putType v       <> putAttr <> Blaze.fromWord8 99 <> fromValueV x
+qBytes v@(KTable        _ !x)  = putType v       <> putAttr <> BB.word8 99 <> fromValueV x
 qBytes v@(KDict        !l !r)  = putType v       <> qBytes (V l) <> qBytes (V r)
 
 -----------------------------------------------------------------------------
@@ -167,24 +168,24 @@ genFnFromWordNVB f = SV.foldl' (\a b -> a <> f b) mempty
 {-# SPECIALIZE genFnFromWordNVB :: (SV.Storable Word64) => (Word64 -> Builder) -> SV.Vector Word64 -> Builder #-}
 
 fromWord8V :: SV.Vector Word8 -> Builder
-fromWord8V = genFnFromWordNVB Blaze.fromWord8
+fromWord8V = genFnFromWordNVB BB.word8
 {-# INLINE fromWord8V #-}
 
 fromWord16V :: SV.Vector Word16 -> Builder
-fromWord16V = genFnFromWordNVB Blaze.fromWord16host
+fromWord16V = genFnFromWordNVB BB.word16Host
 {-# INLINE fromWord16V #-}
 
 fromWord32V :: SV.Vector Word32 -> Builder
-fromWord32V = genFnFromWordNVB Blaze.fromWord32host
+fromWord32V = genFnFromWordNVB BB.word32Host
 {-# INLINE fromWord32V #-}
 
 fromWord64V :: SV.Vector Word64 -> Builder
-fromWord64V = genFnFromWordNVB Blaze.fromWord64host
+fromWord64V = genFnFromWordNVB BB.word64Host
 {-# INLINE fromWord64V #-}
 
 -- | Function to write Q type in ByteString.
 putType :: Value -> Builder
-putType = Blaze.fromWord8 . KT.qType
+putType = BB.word8 . KT.qType
 {-# INLINE putType #-}
 
 -- write type, attr, length for list elements.
@@ -192,13 +193,13 @@ putListHeader :: Value -> Builder
 putListHeader x
   = putType x <>
     putAttr   <>
-    (Blaze.fromWord32host . fromIntegral $ KT.numElements x)
+    (BB.word32Host . fromIntegral $ KT.numElements x)
 {-# INLINE putListHeader #-}
 
 -- | Function to write Q attribute.
 -- TODO: Extend this.
 putAttr :: Builder
-putAttr = Blaze.fromWord8 0
+putAttr = BB.word8 0
 {-# INLINE putAttr #-}
 
 fromValueV :: V.Vector Value -> Builder

@@ -11,7 +11,7 @@
 -----------------------------------------------------------------------------
 module Main where
 
-import qualified Blaze.ByteString.Builder             as Blaze
+import qualified Data.ByteString.Builder              as BB
 import           Control.Applicative                  ((<$>))
 import qualified Control.Monad                        as CM
 import           Criterion.Main
@@ -34,7 +34,7 @@ benchmark :: IO ()
 benchmark = defaultMain [
     env (setupEnv 1000000) $ \ ~rows ->
         bgroup "IPC" [
-            bench "asyncIPC" $ nf (map (Blaze.toByteString . IPC.asyncIPC)) rows
+            bench "asyncIPC" $ nf (map (BB.bytestring . IPC.asyncIPC)) rows
         ]
    ]
 
